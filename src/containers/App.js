@@ -6,46 +6,37 @@ import './App.css';
 import Scroll from '../components/Scroll';
 import ErrorBoundry from '../components/ErrorBoundry';
 
-import {setSearchField} from '../actions';
+import {setSearchField, searchRobots} from '../actions';
 
 const mapStateToProps = state =>{
     return{
-        searchField: state.searchField
+        searchField: state.searchRobots.searchField,
+        robots: state.requestRobots.robots,
+        isPending: state.requestRobots.isPending,
+        error: state.requestRobots.error        
     }
 }
 
 const mapDispatchToProps = (dispatch) =>{
     return{
-        onSearchChange: (event) => dispatch(setSearchField(event.target.value))
+        onSearchChange: (event) => dispatch(setSearchField(event.target.value)),
+        onRequestRobots: () => dispatch(searchRobots())
     }
 }
 
-
 class App extends Component {
-    constructor() {
-        super()
-        this.state = {
-            robots: [],
-        }
-    }
-
     componentDidMount(){
-        console.log(this.props.store);
-        fetch('https://jsonplaceholder.typicode.com/users')
-            .then(response => response.json())
-            .then(users => this.setState({robots: users}));
+        this.props.onRequestRobots();
     }
 
     render() {
-        const {robots} = this.state;
-        const {searchField, onSearchChange} = this.props;
+        const {searchField, onSearchChange, robots, isPending} = this.props;
         const filteredRobots = robots.filter(robot =>{
             return robot.name.toLowerCase().includes(searchField.toLowerCase())
         })
-        if (!robots.length) {
-            return <h1>Loading...</h1>
-        } else {
-        return (
+        return isPending?
+        <h1>Loading...</h1>:
+        (
             <div className='tc'>
                 <h1 className='f1'>RoboFriends</h1>
                 <SearchBox searchChange={onSearchChange}/>
@@ -55,10 +46,8 @@ class App extends Component {
                     </ErrorBoundry>
                 </Scroll>
             </div>
-            );
+        );
         }
-    }
-   
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);
